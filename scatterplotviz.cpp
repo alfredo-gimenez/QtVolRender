@@ -2,30 +2,22 @@
 
 #include <QPaintEvent>
 
+#include <iostream>
 #include <cmath>
 using namespace std;
 
 #include "util.h"
 
-ScatterPlotViz::ScatterPlotViz()
+ScatterPlotViz::ScatterPlotViz(QWidget *parent)
+    : GLWidget(parent)
 {
-    VizWidget();
-
-    // GLWidget options
-    setMinimumSize(200, 200);
-    setAutoFillBackground(false);
-
-    // Set painting variables
-    backgroundColor = QBrush(QColor(204, 229, 255));
-    vizProcessed = false;
-
     xdim = 0;
     ydim = 1;
 }
 
-void ScatterPlotViz::processViz()
+void ScatterPlotViz::processData()
 {
-    points.clear();
+    renderPoints.clear();
 
     xMin = *(data->begin+xdim);
     xMax = *(data->begin+xdim);
@@ -44,81 +36,69 @@ void ScatterPlotViz::processViz()
         yMin = min(yMin,y);
         yMax = max(yMax,y);
 
-        points.push_back(QPointF(x,y));
+        renderPoints.push_back(x);
+        renderPoints.push_back(y);
     }
 
-    vizProcessed = true;
+    processed = true;
+}
+
+void ScatterPlotViz::drawNativeGL()
+{
+    if(!processed)
+        return;
+
+    // Why do i need to double these?
+    // I really don't know.
+    int width2x = width()*2;
+    int height2x = height()*2;
+    int margin2x = margin*2;
+
+    glViewport(margin2x,
+               margin2x,
+               width2x-2*margin2x,
+               height2x-2*margin2x);
+
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(xMin, xMax, yMax, yMin, 0, 1);
+
+    glPointSize(10.0f);
+    glColor4f(1,0,0,1);
+
+    glEnableClientState(GL_VERTEX_ARRAY);
+    glVertexPointer(2,GL_FLOAT,0,renderPoints.constData());
+    glDrawArrays(GL_POINTS,0,renderPoints.size()/2);
 }
 
 void ScatterPlotViz::setDims(int x, int y)
 {
-    vizProcessed = false;
-
     xdim = x;
     ydim = y;
 
-    processViz();
+    processData();
     repaint();
 }
 
-void ScatterPlotViz::paint(QPainter *painter, QPaintEvent *event, int elapsed)
+void ScatterPlotViz::drawQtPainter(QPainter *painter)
 {
-    painter->fillRect(event->rect(), backgroundColor);
-
-    if(!vizProcessed)
+    if(!processed)
         return;
 
-    int m = 20;
-    plotBBox = QRectF(m,m,
-                      event->rect().width()-m-m,
-                      event->rect().height()-m-m);
+    QRect plotRect = QRect(margin,margin,
+                           rect().width()-2*margin,
+                           rect().height()-2*margin);
 
     // Draw axes
     painter->setBrush(QBrush(QColor(0,0,0)));
-    painter->drawLine(plotBBox.bottomLeft(),plotBBox.topLeft());
-    painter->drawLine(plotBBox.bottomLeft(),plotBBox.bottomRight());
+    painter->drawLine(plotRect.bottomLeft(),plotRect.topLeft());
+    painter->drawLine(plotRect.bottomLeft(),plotRect.bottomRight());
 
     // Draw axis labels
-    painter->drawText(plotBBox.bottomLeft()+QPointF(0,10),data->meta[xdim]);
+    painter->drawText(plotRect.bottomLeft()+QPointF(0,10),data->meta[xdim]);
     painter->save();
-    painter->translate(plotBBox.bottomLeft()-QPointF(5,0));
+    painter->translate(plotRect.bottomLeft()-QPointF(5,0));
     painter->rotate(270);
     painter->drawText(QPointF(0,0),data->meta[ydim]);
     painter->restore();
-
-    // Draw points
-    qreal xscale = plotBBox.width();
-    qreal yscale = plotBBox.height();
-
-    QPointF o = plotBBox.bottomLeft();
-    QPointF p;
-
-    // Draw unselected points (first, to avoid occlusion)
-    painter->setPen(QPen(Qt::black, 3, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-    for(int i=0; i<points.size(); i++)
-    {
-        if(data->selection[i] != 0)
-            continue;
-
-        p = QPointF(xscale*normalize(points[i].x(),xMin,xMax),
-                    yscale*normalize(points[i].y(),yMin,yMax));
-        p.setY(-p.y());
-
-        painter->drawPoint(o+p);
-    }
-
-    // Draw selected points
-    painter->setPen(QPen(Qt::red, 3, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-    for(int i=0; i<points.size(); i++)
-    {
-        if(data->selection[i] == 0)
-            continue;
-
-        p = QPointF(xscale*normalize(points[i].x(),xMin,xMax),
-                    yscale*normalize(points[i].y(),yMin,yMax));
-        p.setY(-p.y());
-
-        if(data->selection[i] != 0)
-        painter->drawPoint(o+p);
-    }
 }

@@ -15,13 +15,13 @@ SOURCES  += main.cpp\
             mainwindow.cpp \
     dataobject.cpp \
     util.cpp \
-    scatterplotviz.cpp \
-    vizwidget.cpp
+    glwidget.cpp \
+    scatterplotviz.cpp
 
 HEADERS  += mainwindow.h \
     dataobject.h \
     util.h \
-    scatterplotviz.h \
-    vizwidget.h
+    glwidget.h \
+    scatterplotviz.h
 
 FORMS    += mainwindow.ui

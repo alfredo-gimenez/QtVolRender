@@ -5,7 +5,8 @@
 
 #include <QVector>
 
-#include "scatterplotviz.h"
+#include "glwidget.h"
+#include "dataobject.h"
 
 namespace Ui {
 class MainWindow;
@@ -27,7 +28,7 @@ public slots:
 private:
     Ui::MainWindow *ui;
 
-    QVector<VizWidget*> vizWidgets;
+    QVector<GLWidget*> vizWidgets;
     QVector<DataObject*> dataObjects;
 };
 

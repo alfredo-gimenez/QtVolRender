@@ -8,6 +8,8 @@ using namespace std;
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+#include "scatterplotviz.h"
+
 // Correlation matrix based on selection
 // 3D scatterplot using cubes as elements
 // Reset parallel coordinates spacing
@@ -30,10 +32,10 @@ MainWindow::MainWindow(QWidget *parent) :
     // Add to viz widgets
     vizWidgets.push_back(scatterPlotViz);
 
-    for(int i=0; i<vizWidgets.size(); i++)
-    {
-        connect(vizWidgets[i], SIGNAL(repaintAll()), this, SLOT(repaintAllVizWidgets()));
-    }
+    //for(int i=0; i<vizWidgets.size(); i++)
+    //{
+    //    connect(vizWidgets[i], SIGNAL(repaintAll()), this, SLOT(repaintAllVizWidgets()));
+    //}
 }
 
 MainWindow::~MainWindow()
@@ -63,10 +65,7 @@ int MainWindow::importData()
     dataObjects.push_back(dobj);
 
     for(int i=0; i<vizWidgets.size(); i++)
-    {
         vizWidgets[i]->setData(dobj);
-        vizWidgets[i]->processViz();
-    }
 
     repaintAllVizWidgets();
 

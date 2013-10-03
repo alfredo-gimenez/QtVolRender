@@ -1,22 +1,26 @@
 #ifndef SCATTERPLOTVIZ_H
 #define SCATTERPLOTVIZ_H
 
-#include "vizwidget.h"
+#include <QVector2D>
 
-class ScatterPlotViz : public VizWidget
+#include "glwidget.h"
+
+class ScatterPlotViz : public GLWidget
 {
     Q_OBJECT
-public:
-    ScatterPlotViz();
 
 public:
-    void paint(QPainter *painter, QPaintEvent *event, int elapsed);
-    void processViz();
+    ScatterPlotViz(QWidget *parent = 0);
 
 signals:
 
 public slots:
     void setDims(int x, int y);
+
+protected:
+    void processData();
+    void drawNativeGL();
+    void drawQtPainter(QPainter *painter);
 
 private:
     long long xdim;
@@ -28,6 +32,7 @@ private:
     qreal yMax;
 
     QVector<QPointF> points;
+    QVector<GLfloat> renderPoints;
 
     QRectF plotBBox;
 };
